@@ -2,27 +2,17 @@ import os
 import cv2
 from glob import glob 
 import os.path as osp
-import time
-import shutil
-from pathlib import Path
-import pathlib
-import sys
-import ast
-
-import matplotlib.pyplot as plt
 import numpy as np
-import random
 
 import magic
 import re
 import pandas as pd
 import gc
 
-from PIL import Image
 from tqdm.notebook import tqdm
 import torch
 
-from ocSort.trackers.ocsort.ocsort import OCSort
+from ocsort.ocsort import OCSort
 
 
 def verify_annotation(annotation):
