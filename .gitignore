@@ -1,26 +1,4 @@
-pynb_checkpoints/
-230207_OC_Sort-Copy1.ipynb
-230207_OC_Sort.ipynb
-230208.ipynb
-230208_ocSort.csv
-230209_descriptor.ipynb
-230210.ipynb
-230210_ocSort.csv
-230214.ipynb
-230214_ocSort_V1482_p1_AD.csv
-230214_ocSort_twice.csv
-230215.ipynb
-230217_modulize.ipynb
-230220_modulize_class-updateOCSort.ipynb
-230220_modulize_class.ipynb
-230223_descriptor.ipynb
-230223_modulize_class.ipynb
-230227_descriptor.ipynb
-230228_modulize_class_update.ipynb
-230301_Version2 - trial.ipynb
-230303_Version2 - trial2.ipynb
-230306_Version2 - class.ipynb
-Untitled.ipynb
 __pycache__/
-update_OC_SORT/
-
+*.ipynb
+.ipynb_checkpoints/
+*.csv
