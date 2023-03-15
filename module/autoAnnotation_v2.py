@@ -166,7 +166,9 @@ class autoAnnotate:
                 annote_xyxy_dict[img_name]= np.nan
                 annote_dict[img_name] = np.nan
 
-        df = pd.DataFrame(columns = ['image', 'path','dets', 'dets_xyxy', 'tracker_forward', 'tracker_backward', 'tracker_rst', 'interpolate_rst', 'final_pred'])  
+        df = pd.DataFrame(columns = ['image', 'path','dets', 'dets_xyxy', 
+                                     'tracker_forward', 'tracker_backward', 'tracker_rst', 
+                                     'interpolate_rst', 'final_pred'])  
         df['image'] = img_path_dict.keys()
         df['path'] = df['image'].apply(lambda x : img_path_dict[x])
         df['dets'] = df['image'].apply(lambda x : annote_dict[x])
