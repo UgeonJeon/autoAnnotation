@@ -103,7 +103,8 @@ def IoU( box1, box2):
     return iou
 
 
-def calculateZOOM(img1, img2, scale_factor = 0.7):
+def calculateZOOM(img1, img2, scale_factor=0.7):
+    # Resize images
     small1 = cv2.resize(img1, None, fx=scale_factor, fy=scale_factor)
     small2 = cv2.resize(img2, None, fx=scale_factor, fy=scale_factor)
 
@@ -111,26 +112,37 @@ def calculateZOOM(img1, img2, scale_factor = 0.7):
     gray1 = cv2.cvtColor(small1, cv2.COLOR_BGR2GRAY)
     gray2 = cv2.cvtColor(small2, cv2.COLOR_BGR2GRAY)
 
-    # Detect keypoints and compute the ORB descriptors
-    orb = cv2.ORB_create()
-    keypoints1, descriptors1 = orb.detectAndCompute(gray1, None)
-    keypoints2, descriptors2 = orb.detectAndCompute(gray2, None)
+    # Detect keypoints and compute the SIFT descriptors
+    sift = cv2.SIFT_create()
+    keypoints1, descriptors1 = sift.detectAndCompute(gray1, None)
+    keypoints2, descriptors2 = sift.detectAndCompute(gray2, None)
 
-    # Match the descriptors
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-    matches = bf.match(descriptors1, descriptors2)
+    # Configure FLANN matcher
+    FLANN_INDEX_KDTREE = 1
+    index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+    search_params = dict(checks=50)
+    flann = cv2.FlannBasedMatcher(index_params, search_params)
 
-    # Sort the matches in the order of their distances
-    matches = sorted(matches, key = lambda x : x.distance)
+    # Match the descriptors using the k-nearest neighbors method
+    matches = flann.knnMatch(descriptors1, descriptors2, k=2)
 
-    # Calculate the zoom level
-    if len(matches) > 4:
-        src_pts = np.float32([keypoints1[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
-        dst_pts = np.float32([keypoints2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
+    # Filter matches using Lowe's ratio test
+    good_matches = [m for m, n in matches if m.distance < 0.75 * n.distance]
+
+    # Calculate the zoom level if there are enough good matches
+    if len(good_matches) > 4:
+        src_pts = np.float32([keypoints1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+        dst_pts = np.float32([keypoints2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
 
         M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-        zoom = np.abs(np.linalg.det(M))
-    return zoom
+
+        if M is not None:
+            zoom = np.abs(np.linalg.det(M))
+            return zoom
+        else:
+            print('M is None')
+    else:
+        print('not enough good match')
 
 
 class autoAnnotate:
