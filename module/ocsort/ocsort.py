@@ -205,24 +205,8 @@ class OCSort(object):
         """
 
         self.frame_count += 1
-        # dets [[x1,y1,x2,y2,cls],[x1,y1,x2,y2,cls],...] -> [[x1,y1,x2,y2,1,cls],[x1,y1,x2,y2,1,cls],...]
+        # dets [[x1,y1,x2,y2,cls]] -> [[x1,y1,x2,y2,1,cls]]
         dets = np.hstack((dets[:,:4] , np.ones((len(dets),1)) , dets[:,4].reshape(len(dets),1)))
-       # xyxys = dets[:, 0:4]
-       # confs = dets[:, 4]
-       # clss = dets[:, 5]
-        
-       # classes = clss.numpy()
-       # xyxys = xyxys.numpy()
-       # confs = confs.numpy()
-
-       # output_results = np.column_stack((xyxys, confs, classes))
-        
-       # inds_low = confs > 0.1
-       # inds_high = confs < self.det_thresh
-       # inds_second = np.logical_and(inds_low, inds_high)  # self.det_thresh > score > 0.1, for second matching
-       # dets_second = output_results[inds_second]  # detections for second matching
-       # remain_inds = confs > self.det_thresh
-       # dets = output_results[remain_inds]
 
         # get predicted locations from existing trackers.
         trks = np.zeros((len(self.trackers), 5))
@@ -246,7 +230,6 @@ class OCSort(object):
         """
             First round of association
         """
-
         matched, unmatched_dets, unmatched_trks = associate(
             dets, trks, self.iou_threshold, velocities, k_observations, self.inertia)
         for m in matched:
