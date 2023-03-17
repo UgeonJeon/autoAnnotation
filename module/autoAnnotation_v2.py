@@ -140,9 +140,9 @@ def calculateZOOM(img1, img2, scale_factor=0.7):
             zoom = np.abs(np.linalg.det(M))
             return zoom
         else:
-            print('M is None')
+            return False
     else:
-        print('not enough good match')
+        return False
 
 
 class autoAnnotate:
@@ -167,9 +167,8 @@ class autoAnnotate:
             img_name = image.split('/')[-1]
             try :
                 with open(image[:-4]+ '.txt', 'r') as f:
-                    temp = np.asarray(list(map(lambda x: list(np.float64(x.strip().split( )))+ [1], f.readlines())))
-                    annotation = temp[:,1:]
-                    annotation = np.append(annotation, temp[:,0]).reshape(1,6)
+                    temp = np.asarray(list(map(lambda x: list(np.float64(x.strip().split( ))), f.readlines())))
+                    annotation = np.hstack((temp[:,1:], temp[:,0].reshape(len(temp),1)))
 
                     annotation_xyxy = xywh2xyxy(annotation, image_shape)
                     annote_dict[img_name] = annotation
@@ -249,14 +248,15 @@ class autoAnnotate:
                 zoom_factor = []
                 tracker.update(det,img)
             else :
-                det = np.empty((0, 6))
+                det = np.empty((0, 5))
                 pred_dets = tracker.update(det,img, return_predict = True)
-                pred_dets = self.get_properDets(pred_dets, prev_TrueDets, tracking_valid_iou)
+                if isinstance(prev_TrueDets, (np.ndarray)) and len(pred_dets) != len(prev_TrueDets):
+                    pred_dets = self.get_properDets(pred_dets, prev_TrueDets, tracking_valid_iou)
 
                 if predictable_state and predDet_count < pred_count + 1 and len(pred_dets) >=1:
                     zoom = calculateZOOM(prev_img, img)
-                    zoom_factor.append(zoom)
                     if zoom >= 0.6 and zoom <= 1.6:
+                        zoom_factor.append(zoom)
                         pred_dets_xywh = xyxy2xywh(pred_dets, image_shape)
                         pred_dets_xywh[:,2] = prev_TrueDets_xywh[:,2].max() * np.mean(zoom_factor)
                         pred_dets_xywh[:,3] = prev_TrueDets_xywh[:,3].max() * np.mean(zoom_factor)
@@ -355,15 +355,16 @@ class autoAnnotate:
             start_det = out_df._get_value(start_idx,'dets')
             end_det = out_df._get_value(end_idx, 'dets')
             if len(start_det) == 1 and len(end_det) == 1:
+                # 현재 1개의 detection에 대해서만 처리하고 있음
                 diff_det = (end_det - start_det) / (end_idx - start_idx)
                 dcx, dcy, dw, dh =  diff_det[0][0], diff_det[0][1], diff_det[0][2], diff_det[0][3]
 
                 for mv_idx, df_idx in enumerate(range(start_idx + 1, end_idx)):
-                    new_cx = start_det[:,0] + dcx * (mv_idx + 1)
-                    new_cy = start_det[:,1] + dcy * (mv_idx + 1)
-                    new_w = start_det[:,2] + dw * (mv_idx + 1)
-                    new_h = start_det[:,3] + dh * (mv_idx + 1)
-                    new_det = f"{new_cx[0]} {new_cy[0]} {new_w[0]} {new_h[0]} 1 0"
+                    new_cx = start_det[0,0] + dcx * (mv_idx + 1)
+                    new_cy = start_det[0,1] + dcy * (mv_idx + 1)
+                    new_w = start_det[0,2] + dw * (mv_idx + 1)
+                    new_h = start_det[0,3] + dh * (mv_idx + 1)
+                    new_det = f"{new_cx} {new_cy} {new_w} {new_h} {start_det[0,-1]}"
                     new_det2 = np.array([list(map(lambda x : np.float64(x), new_det.split()))])
                     out_df._set_value(df_idx, 'interpolate_rst', new_det2)
         return out_df
@@ -404,9 +405,8 @@ class autoAnnotate:
         for idx in new_annotes:
             imageName = df._get_value(idx, 'image')
             temp_new = df._get_value(idx, col_name)
-            tmpe_new2 = temp_new[:,:4]
-            tmpe_new2 = np.append(temp_new[:,-1], tmpe_new2).reshape(1,5)
-            ret, new_preds = verify_annotation(tmpe_new2)
+            temp_new2 = np.hstack((temp_new[:,-1].reshape(len(temp_new), 1), temp_new[:,:4]))
+            ret, new_preds = verify_annotation(temp_new2)
 
             if ret != 'error':
                 with open(save_path + imageName[:-4] + '.txt', 'w') as f:
