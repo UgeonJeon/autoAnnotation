@@ -243,7 +243,7 @@ class autoAnnotate:
 
                 prev_img = img
                 prev_TrueDets = det
-                prev_TrueDets_xywh = xyxy2xywh(det, image_shape)
+                prev_TrueDets_xywh = out_df._get_value(idx, 'dets')
                 predDet_count = 1
                 zoom_factor = []
                 tracker.update(det,img)
