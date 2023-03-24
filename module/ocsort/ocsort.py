@@ -18,6 +18,22 @@ def k_previous_obs(observations, cur_age, k):
     max_age = max(observations.keys())
     return observations[max_age]
 
+def non_max_suppression(boxes, iou_threshold):
+    if len(boxes) == 0:
+        return []
+
+    keep = []
+    while len(boxes) > 0:
+        best_box = boxes[0]
+        keep.append(best_box)
+        rest_boxes = boxes[1:]
+
+        ious = np.array([IoU(best_box[:4], box[:4]) for box in rest_boxes])
+        boxes = rest_boxes[ious < iou_threshold]
+
+    return np.array(keep)
+
+
 
 def convert_bbox_to_z(bbox):
     """
@@ -287,9 +303,13 @@ class OCSort(object):
             if(trk.time_since_update > self.max_age):
                 self.trackers.pop(i)
         if return_predict:
+            
             if len(unmatched_dets) >= 1:
+                unmatched_dets = non_max_suppression(unmatched_dets, iou_threshold)
                 return unmatched_dets
-            return trks
+            else:
+                trks = non_max_suppression(trks, iou_threshold)
+                return trks
 
         if(len(ret) > 0):
             return np.concatenate(ret)
