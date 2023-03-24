@@ -103,6 +103,7 @@ def IoU( box1, box2):
     return iou
 
 
+
 def calculateZOOM(img1, img2, scale_factor=0.7):
     # Resize images
     small1 = cv2.resize(img1, None, fx=scale_factor, fy=scale_factor)
@@ -190,6 +191,7 @@ class autoAnnotate:
 
     def get_properDets(self, prev_dets, new_dets, tracking_valid_iou):
         """
+        compare predicted dets with previous dets
         prev_dets, new_dets 라벨링1:1 매칭해 prev_dets와 tracking_valid_iou 이상인 new_dets만 남김
         """
         valid_idx = []
@@ -201,7 +203,7 @@ class autoAnnotate:
         valid_idx = list(set(valid_idx))
         valid_prev_dets = prev_dets[valid_idx]
         return valid_prev_dets
-
+    
     
     # predict with tracker
     def create_ocSort_tracker(self):
